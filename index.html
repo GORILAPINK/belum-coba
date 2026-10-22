@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GORILA Store - Katalog & Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+<header class="bg-white shadow sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto p-4 flex justify-between items-center gap-3 flex-wrap">
+        <h1 class="text-2xl font-bold">🛍️ GORILA Store</h1>
+
+        <div class="flex items-center gap-2">
+            <div id="auth-container">
+                <button onclick="loginGoogle()"
+                    class="bg-white border px-4 py-2 rounded-lg">
+                    Login Google
+                </button>
+            </div>
+
+            <button onclick="toggleCartModal(true)"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                🛒 Keranjang
+                <span id="cart-count"
+                    class="bg-red-500 rounded-full px-2 text-xs">0</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+    <div id="product-grid"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <p>Memuat produk...</p>
+    </div>
+
+</main>
+
+<!-- Modal keranjang -->
+<div id="cart-modal"
+    class="fixed inset-0 bg-black/50 hidden z-50 flex justify-end">
+
+    <div class="bg-white w-full max-w-md h-full p-6 flex flex-col">
+
+        <div class="flex justify-between border-b pb-4 mb-4">
+            <h2 class="text-xl font-bold">Keranjang Belanja</h2>
+            <button onclick="toggleCartModal(false)"
+                class="text-3xl">&times;</button>
+        </div>
+
+        <div id="cart-items-container"
+            class="flex-1 overflow-y-auto space-y-4"></div>
+
+        <div id="cart-donation-section"
+            class="border-t pt-3 mt-3 hidden">
+            <p class="font-bold text-emerald-700">💖 Donasi</p>
+            <p id="donation-amount-text">Rp0</p>
+            <button onclick="removeDonation()"
+                class="text-red-600 text-sm">Hapus donasi</button>
+        </div>
+
+        <div class="border-t pt-4 mt-4 space-y-2">
+            <div class="flex justify-between">
+                <span>Subtotal Produk</span>
+                <span id="subtotal-products">Rp0</span>
+            </div>
+
+            <div class="flex justify-between text-emerald-700">
+                <span>Donasi</span>
+                <span id="subtotal-donation">Rp0</span>
+            </div>
+
+            <div class="flex justify-between font-bold text-lg">
+                <span>Grand Total</span>
+                <span id="cart-total">Rp0</span>
+            </div>
+
+            <button id="checkout-btn" onclick="processCheckout()"
+                class="w-full bg-green-600 hover:bg-green-700
+                text-white p-3 rounded-lg font-bold">
+                Lanjut ke Checkout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal QRIS -->
+<div id="qris-modal"
+    class="fixed inset-0 bg-black/60 hidden z-[60]
+    items-center justify-center p-4">
+
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 text-center">
+
+        <h2 class="text-xl font-bold">Pembayaran QRIS</h2>
+
+        <p class="text-sm mt-2">
+            Kode Pesanan:
+            <span id="order-id" class="font-bold"></span>
+        </p>
+
+        <div class="bg-gray-50 border rounded-lg p-4 my-4">
+            <img id="qris-img" src="" alt="QRIS"
+                class="w-48 h-48 object-contain mx-auto hidden">
+
+            <p id="qris-placeholder" class="text-sm text-gray-500">
+                QRIS belum dikonfigurasi.
+            </p>
+        </div>
+
+        <p>Total Pembayaran</p>
+        <p id="qris-total"
+            class="text-2xl font-bold text-emerald-600 mb-4">Rp0</p>
+
+        <button id="confirm-payment-btn" onclick="confirmPayment()"
+            class="w-full bg-emerald-600 text-white p-3 rounded-lg">
+            Saya Sudah Bayar
+        </button>
+
+        <p id="payment-message" class="text-sm mt-3"></p>
+
+        <button onclick="closeQrisModal()"
+            class="w-full bg-gray-200 p-2 rounded-lg mt-3">
+            Tutup
+        </button>
+    </div>
+</div>
+
+<div id="notice"
+    class="fixed bottom-4 left-1/2 -translate-x-1/2
+    bg-gray-900 text-white p-3 rounded-lg hidden z-[70]">
+</div>
+
+<script src="user.js"></script>
+</body>
+</html>

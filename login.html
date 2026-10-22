@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GORILA Store</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: sans-serif; text-align: center; margin-top: 100px;">
+
+    <h2>Selamat Datang di GORILA Store</h2>
+    <button id="btnGoogle" style="padding: 10px 20px; cursor: pointer;">Masuk dengan Google</button>
+
+    <script>
+        const SUPABASE_URL = "https://txmbeylyepacynfulwip.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_FGNsE1INo7jcMgZ-bRPzvg_o2txZETj";
+        
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Cek Sesi User
+        async function checkUserSession() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            
+            if (session) {
+                const user = session.user;
+                localStorage.setItem('user_name', user.user_metadata.full_name || user.email);
+                localStorage.setItem('user_email', user.email);
+                
+                // Pindah ke user.html jika sesi aktif
+                window.location.href = 'user.html';
+            }
+        }
+        checkUserSession();
+
+        // Tombol Login Google
+        document.getElementById('btnGoogle').addEventListener('click', async () => {
+            const { data, error } = await _supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/login.html'
+                }
+            });
+
+            if (error) {
+                alert('Gagal login dengan Google: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

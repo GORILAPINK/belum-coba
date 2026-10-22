@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Produk - Supabase</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Manajemen Produk E-Commerce</h1>
+            <p class="text-gray-600">Kelola data produk (CRUD) menggunakan Supabase API</p>
+        </header>
+
+        <!-- Form Tambah / Edit Produk -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 id="form-title" class="text-xl font-semibold mb-4 text-gray-700">Tambah Produk Baru</h2>
+            <form id="product-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="hidden" id="product-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Nama Produk</label>
+                    <input type="text" id="name" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Harga (Price)</label>
+                    <input type="number" id="price" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Stok</label>
+                    <input type="number" id="stock" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit" id="save-btn" class="flex-1 bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition">Simpan</button>
+                    <button type="button" id="cancel-btn" onclick="resetForm()" class="hidden bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400 transition">Batal</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabel Daftar Produk -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700">Daftar Produk</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
+                            <th class="py-3 px-6">ID</th>
+                            <th class="py-3 px-6">Nama Produk</th>
+                            <th class="py-3 px-6">Harga</th>
+                            <th class="py-3 px-6">Stok</th>
+                            <th class="py-3 px-6 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-table-body" class="divide-y divide-gray-200 text-gray-700">
+                        <!-- Data produk akan dimuat di sini melalui JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skrip Konfigurasi & Logika Supabase -->
+    <script>
+        // Konfigurasi Kunci Supabase Anda (Ganti dengan URL & Anon Key dari project Supabase Anda)
+        const SUPABASE_URL = 'https://txmbeylyepacynfulwip.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_FGNsE1INo7jcMgZ-bRPzvg_o2txZETj';
+        
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const productForm = document.getElementById('product-form');
+        const productIdInput = document.getElementById('product-id');
+        const nameInput = document.getElementById('name');
+        const priceInput = document.getElementById('price');
+        const stockInput = document.getElementById('stock');
+        const formTitle = document.getElementById('form-title');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const tableBody = document.getElementById('product-table-body');
+
+        // 1. READ: Mengambil dan Menampilkan Data Produk
+        async function fetchProducts() {
+            const { data, error } = await _supabase
+                .from('produk')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                console.error('Gagal mengambil data:', error.message);
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-4 px-6 text-center text-gray-500">Belum ada produk.</td></tr>`;
+                return;
+            }
+
+            data.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-3 px-6">${product.id}</td>
+                    <td class="py-3 px-6 font-medium">${product.name}</td>
+                    <td class="py-3 px-6">Rp ${Number(product.price).toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-6">${product.stock}</td>
+                    <td class="py-3 px-6 text-center space-x-2">
+                        <button onclick="editProduct(${product.id}, '${product.name}', ${product.price}, ${product.stock})" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600">Edit</button>
+                        <button onclick="deleteProduct(${product.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 2. CREATE & UPDATE: Handle Submit Form
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = productIdInput.value;
+            const name = nameInput.value;
+            const price = parseInt(priceInput.value);
+            const stock = parseInt(stockInput.value);
+
+            if (id) {
+                // UPDATE
+                const { error } = await _supabase
+                    .from('produk')
+                    .update({ name, price, stock })
+                    .eq('id', id);
+
+                if (error) alert('Gagal memperbarui produk: ' + error.message);
+            } else {
+                // CREATE
+                const { error } = await _supabase
+                    .from('produk')
+                    .insert([{ name, price, stock }]);
+
+                if (error) alert('Gagal menambah produk: ' + error.message);
+            }
+
+            resetForm();
+            fetchProducts();
+        });
+
+        // Helper untuk mengisi form saat tombol Edit diklik
+        function editProduct(id, name, price, stock) {
+            productIdInput.value = id;
+            nameInput.value = name;
+            priceInput.value = price;
+            stockInput.value = stock;
+            formTitle.innerText = 'Edit Produk (ID: ' + id + ')';
+            cancelBtn.classList.remove('hidden');
+        }
+
+        // Reset form ke mode tambah
+        function resetForm() {
+            productIdInput.value = '';
+            productForm.reset();
+            formTitle.innerText = 'Tambah Produk Baru';
+            cancelBtn.classList.add('hidden');
+        }
+
+        // 3. DELETE: Menghapus Produk
+        async function deleteProduct(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                const { error } = await _supabase
+                    .from('produk')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    alert('Gagal menghapus produk: ' + error.message);
+                } else {
+                    fetchProducts();
+                }
+            }
+        }
+
+        // Panggil fungsi fetch saat halaman pertama kali dimuat
+        fetchProducts();
+    </script>
+</body>
+</html>
